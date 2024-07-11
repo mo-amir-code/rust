@@ -40,6 +40,7 @@ fn save_transactions(transactions: &Vec<Transaction>) -> io::Result<()> {
 fn load_transactions() -> io::Result<Vec<Transaction>> {
     let data = fs::read_to_string(FILE_PATH)?;
     let transactions: Vec<Transaction> = serde_json::from_str(&data)?;
+
     Ok(transactions)
 }
 
