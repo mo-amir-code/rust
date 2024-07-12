@@ -9,38 +9,31 @@ struct Account {
     password: String
 }
 
-enum take_input_return_output {
+enum TakeInputReturnOutput {
     Str(String),
-    Int(i64)
+    Int(u64)
 }
-
-impl take_input_return_output {
-    fn as_str(&self) -> Option<&str> {
-        if let take_input_return_output::Str(s) = self {
-            Some(s)
-        } else {
-            None
-        }
-    }
-
-    fn as_int(&self) -> Option<i64> {
-        if let take_input_return_output::Int(i) = self {
-            Some(*i)
-        } else {
-            None
-        }
-    }
-}
-
 
 impl Account {
-    fn check_balance(&self) -> u64 {
-        return self.balance;
+    fn check_balance(&self) {
+        println!("Name: {}", self.name);
+        println!("Balance: {}", self.balance);
+        println!("Account Number: {} \n\n", self.account_number);
     }
 
     fn deposit(&mut self, amount: u64) {
         self.balance += amount;
         println!("{} amount added in your account", amount);
+    }
+
+    fn withdrawal(&mut self, amount: u64) {
+        if !(self.balance >= amount) {
+            println!("Insufficient balance");
+            return;
+        }
+
+        self.balance -= amount;
+        println!("{} amount withdrawaled from your account", amount);
     }
 }
 
@@ -57,20 +50,30 @@ fn main() {
         println!("2. Check your balance: ");
         println!("3. Deposit money: ");
         println!("4. Withdrawal money: ");
+        println!("5. Exit: ");
         println!("\nEnter any number ===> ");
 
 
-        let selection: take_input_return_output = take_input(true);
+        let selection: TakeInputReturnOutput = take_input(true);
 
         match selection {
-            take_input_return_output::Int(1) => {
+            TakeInputReturnOutput::Int(1) => {
                 create_account(&mut accounts);
             },
-            take_input_return_output::Int(2) => {
+            TakeInputReturnOutput::Int(2) => {
                 check_account_balance(&accounts);
             },
+            TakeInputReturnOutput::Int(3) => {
+                deposit(&mut accounts);
+            },
+            TakeInputReturnOutput::Int(4) => {
+                withdrawal(&mut accounts);
+            },
+            TakeInputReturnOutput::Int(5) => {
+                break;
+            },
             _ => {
-
+                println!("Plese enter valid number \n");
             }
         }
 
@@ -78,21 +81,21 @@ fn main() {
 
 }
 
-fn take_input(is_number: bool) -> take_input_return_output {
+fn take_input(is_number: bool) -> TakeInputReturnOutput {
     let mut input_handle = String::new();
     io::stdin().read_line(&mut input_handle).expect("Failed to read line");
 
     if is_number {
         let num = input_handle.trim().parse().expect("Please enter a valid number");
-        return take_input_return_output::Int(num);
+        return TakeInputReturnOutput::Int(num);
     }
 
-    take_input_return_output::Str(input_handle.trim().parse().expect("Please enter a valid number"))
+    TakeInputReturnOutput::Str(input_handle.trim().parse().expect("Please enter a valid number"))
 }
 
-fn return_str(val: &mut take_input_return_output) -> String {
+fn return_str(val: &mut TakeInputReturnOutput) -> String {
     match val {
-        take_input_return_output::Str(s) => {
+        TakeInputReturnOutput::Str(s) => {
             return s.to_string();
         },
         _ => {
@@ -104,17 +107,17 @@ fn return_str(val: &mut take_input_return_output) -> String {
     s
 }
 
-fn return_int(val: &mut take_input_return_output) -> i64 {
+fn return_int(val: &mut TakeInputReturnOutput) -> u64 {
     match val {
-        take_input_return_output::Int(i) => {
-            return 1;
+        TakeInputReturnOutput::Int(i) => {
+            return *i;
         },
         _ => {
             println!("Error: While returning string value");
         }
     }
 
-    -1
+    1
 }
 
 fn create_unique_account_number() -> String {
@@ -126,7 +129,7 @@ fn create_unique_account_number() -> String {
 fn create_account(accounts: &mut Vec<Account>) {
 
     println!("Enter your name: ");
-    let mut output: take_input_return_output = take_input(false);
+    let mut output: TakeInputReturnOutput = take_input(false);
     let name: String = return_str(&mut output);
 
     println!("Enter your bank account password: ");
@@ -150,7 +153,7 @@ fn create_account(accounts: &mut Vec<Account>) {
 
 fn check_account_balance(accounts: &Vec<Account>) {
     println!("Enter your account number: ");
-    let mut output: take_input_return_output = take_input(false);
+    let mut output: TakeInputReturnOutput = take_input(false);
     let account_number: String = return_str(&mut output);
 
     println!("Enter your account password: ");
@@ -165,10 +168,58 @@ fn check_account_balance(accounts: &Vec<Account>) {
         }
 
         println!("\nAccount found: ");
-        println!("Name: {}", account.name);
-        println!("Balance: {}", account.balance);
-        println!("Account Number: {} \n\n", account.account_number);
+
+        account.check_balance();
     }else{
         println!("Account not found");
+    }
+}
+
+fn deposit(accounts: &mut Vec<Account>) {
+    println!("Enter Account Number: ");
+    let mut output: TakeInputReturnOutput = take_input(false);
+    let account_number = return_str(&mut output);
+
+
+    if let Some(account) = accounts.iter_mut().find(|acc| acc.account_number == account_number){
+        println!("\nAccount found");
+
+        println!("Enter Deposit Amount: ");
+        output = take_input(true);
+        let deposit_amount: u64 = return_int(&mut output);
+        
+        account.deposit(deposit_amount);
+    }else{
+        println!("Please provide correct account number to prcoeed next steps");
+    }
+   
+}
+
+fn withdrawal(accounts: &mut Vec<Account>){
+    println!("Enter Account Number: ");
+    let mut output: TakeInputReturnOutput = take_input(false);
+    let account_number = return_str(&mut output);
+
+    println!("Enter your account password: ");
+    output = take_input(false);
+    let password: String = return_str(&mut output);
+
+
+    if let Some(account) = accounts.iter_mut().find(|acc| acc.account_number == account_number){
+
+        if account.password != password {
+            println!("Account number or password is wrong \n");
+            return;
+        }
+
+        println!("\nAccount found");
+
+        println!("Enter Withdraw Amount: ");
+        output = take_input(true);
+        let withdraw_amount: u64 = return_int(&mut output);
+
+        account.withdrawal(withdraw_amount);
+    }else{
+        println!("Please provide correct account number to prcoeed next steps");
     }
 }
